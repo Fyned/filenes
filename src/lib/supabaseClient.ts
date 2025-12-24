@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import { createClient } from '@supabase/supabase-js';
 
 // Environment değişkenlerini güvenli bir şekilde alıyoruz
