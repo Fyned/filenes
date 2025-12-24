@@ -1,10 +1,10 @@
 import { useConfigStore, ProductType } from "./stores/useConfigStore";
-import { calculatePrice } from "./lib/pricing";
 import { NetConfigurator } from "./components/3d/NetConfigurator";
 import { Button } from "./components/ui/Button";
 import { Input } from "./components/ui/Input";
+import { calculatePrice } from "./lib/pricing";
 
-// Kategori Buton Grubu
+// İkon ve Etiket Listesi
 const types: { id: ProductType; label: string; icon: string }[] = [
   { id: 'soccer', label: 'Futbol', icon: '⚽' },
   { id: 'basketball', label: 'Basketbol', icon: '🏀' },
@@ -12,140 +12,133 @@ const types: { id: ProductType; label: string; icon: string }[] = [
   { id: 'tennis', label: 'Tenis', icon: '🎾' },
   { id: 'badminton', label: 'Badminton', icon: '🏸' },
   { id: 'safety', label: 'Güvenlik', icon: '🛡️' },
-  { id: 'ballstop', label: 'Top Yakalama', icon: '🥅' },
+  { id: 'ballstop', label: 'Saha Kapama', icon: '🏟️' }, // İSİM GÜNCELLENDİ
 ];
 
 function App() {
-  const { width, height, depth, productType, setWidth, setHeight, setDepth, setProductType } = useConfigStore();
+  const { width, height, depth, productType, selectedProductPrice, setWidth, setHeight, setProductType, setDepth } = useConfigStore();
   
-  // Fiyat Hesapla (Geçici olarak sabit birim fiyat kullanıyoruz - sonra veritabanından gelecek)
-  const unitPrice = 100; // TL per m² (placeholder)
-  const priceResult = calculatePrice(width, height, unitPrice);
+  // Fiyat Hesapla
+  const priceResult = calculatePrice(width, height, selectedProductPrice);
 
   return (
-    <div className="min-h-screen bg-white p-4 md:p-8">
-      <header className="mb-6 border-b pb-4">
-        <h1 className="text-2xl font-bold text-primary">Filenes 3D Configurator</h1>
-        <p className="text-gray-500">Faz 3: 3D Görselleştirme ve Fiyat Testi</p>
+    <div className="min-h-screen bg-neutral-900 text-white p-4 md:p-8"> {/* Sayfa geneli Dark Mode */}
+      <header className="mb-8 border-b border-gray-800 pb-4 flex justify-between items-end">
+        <div>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Filenes Sports</h1>
+          <p className="text-gray-400">Profesyonel Ağ Sistemleri</p>
+        </div>
+        <div className="text-xs text-gray-500 border border-gray-700 rounded px-2 py-1">
+          3D Modül: Aktif
+        </div>
       </header>
 
       <div className="grid gap-8 lg:grid-cols-12">
-        {/* Sol Kolon: 3D Sahne (8 birim) */}
-        <div className="lg:col-span-8">
-          {/* YENİ KATEGORİ SEÇİMİ */}
-          <div className="mb-6 flex flex-wrap gap-2">
+        {/* SOL KOLON: 3D SAHNE */}
+        <div className="lg:col-span-8 space-y-4">
+           {/* Kategori Seçimi */}
+           <div className="flex flex-wrap gap-2">
             {types.map((t) => (
-              <Button 
+              <button 
                 key={t.id}
-                variant={productType === t.id ? 'default' : 'outline'} 
-                className={productType === t.id ? 'bg-primary text-white border-primary' : 'bg-white text-gray-700'}
                 onClick={() => setProductType(t.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all
+                  ${productType === t.id 
+                    ? 'bg-white text-black shadow-lg shadow-white/10 scale-105' 
+                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'
+                  }`}
               >
-                <span className="mr-2">{t.icon}</span> {t.label}
-              </Button>
+                <span>{t.icon}</span> {t.label}
+              </button>
             ))}
           </div>
           
+          {/* 3D Viewer */}
           <NetConfigurator />
         </div>
 
-        {/* Sağ Kolon: Kontroller ve Özet (4 birim) */}
+        {/* SAĞ KOLON: KONTROLLER */}
         <div className="space-y-6 lg:col-span-4">
-          
-          {/* Ölçü Girişleri */}
-          <div className="rounded-lg border bg-gray-50 p-6">
-            <h2 className="mb-4 font-semibold text-primary">Ölçü Konfigürasyonu</h2>
-            
-            <div className="space-y-4">
-              {/* Genişlik Input */}
-              <div>
-                <label className="mb-1 block text-sm font-medium">
-                  {productType === 'basketball' ? 'Çember Çapı' : 'Genişlik (En)'}
-                </label>
-                <div className="flex items-center gap-2">
-                  <Input 
-                    type="number" 
-                    value={width} 
-                    onChange={(e) => setWidth(Number(e.target.value))}
-                    min={0.1} 
-                    max={50}
-                    step={0.1}
-                  />
-                  <span className="text-sm text-gray-500">m</span>
-                </div>
-              </div>
+            <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6 backdrop-blur-sm">
+               <h2 className="mb-4 font-semibold text-white flex items-center gap-2">
+                 📏 Ölçü Konfigürasyonu
+               </h2>
+               
+               <div className="space-y-5">
+                 {/* En */}
+                 <div>
+                   <label className="mb-1.5 block text-xs font-medium text-gray-400 uppercase tracking-wider">
+                     {productType === 'basketball' ? 'Çember Çapı' : 'Genişlik (En)'}
+                   </label>
+                   <div className="flex items-center gap-2 bg-gray-800 rounded-lg p-1 border border-gray-700 focus-within:border-white transition-colors">
+                      <Input 
+                        type="number" 
+                        value={width} 
+                        onChange={(e) => setWidth(Number(e.target.value))} 
+                        step={0.1}
+                        className="bg-transparent border-none text-white focus:ring-0 w-full"
+                      />
+                      <span className="text-gray-500 px-3 font-mono">m</span>
+                   </div>
+                 </div>
 
-              {/* Yükseklik Input */}
-              <div>
-                <label className="mb-1 block text-sm font-medium">
-                  {productType === 'basketball' ? 'File Uzunluğu' : 'Yükseklik (Boy)'}
-                </label>
-                <div className="flex items-center gap-2">
-                  <Input 
-                    type="number" 
-                    value={height} 
-                    onChange={(e) => setHeight(Number(e.target.value))}
-                    min={0.1} 
-                    max={20}
-                    step={0.1}
-                  />
-                  <span className="text-sm text-gray-500">m</span>
-                </div>
-              </div>
+                 {/* Boy */}
+                 <div>
+                   <label className="mb-1.5 block text-xs font-medium text-gray-400 uppercase tracking-wider">
+                     {productType === 'basketball' ? 'File Uzunluğu' : 'Yükseklik (Boy)'}
+                   </label>
+                   <div className="flex items-center gap-2 bg-gray-800 rounded-lg p-1 border border-gray-700 focus-within:border-white transition-colors">
+                      <Input 
+                        type="number" 
+                        value={height} 
+                        onChange={(e) => setHeight(Number(e.target.value))} 
+                        step={0.1}
+                        className="bg-transparent border-none text-white focus:ring-0 w-full"
+                      />
+                      <span className="text-gray-500 px-3 font-mono">m</span>
+                   </div>
+                 </div>
 
-              {/* Derinlik Input (Sadece Futbol için) */}
-              {productType === 'soccer' && (
-                <div>
-                  <label className="mb-1 block text-sm font-medium">Kale Derinliği</label>
-                  <div className="flex items-center gap-2">
-                    <Input 
-                      type="number" 
-                      value={depth} 
-                      onChange={(e) => setDepth(Number(e.target.value))}
-                      min={0.1} 
-                      max={10}
-                      step={0.1}
-                    />
-                    <span className="text-sm text-gray-500">m</span>
-                  </div>
-                </div>
-              )}
+                 {/* Derinlik (Opsiyonel) */}
+                 {(productType === 'soccer' || productType === 'ballstop') && (
+                   <div>
+                     <label className="mb-1.5 block text-xs font-medium text-gray-400 uppercase tracking-wider">
+                       {productType === 'ballstop' ? 'Saha Uzunluğu' : 'Derinlik'}
+                     </label>
+                     <div className="flex items-center gap-2 bg-gray-800 rounded-lg p-1 border border-gray-700 focus-within:border-white transition-colors">
+                        <Input 
+                          type="number" 
+                          value={depth} 
+                          onChange={(e) => setDepth(Number(e.target.value))} 
+                          step={0.1}
+                          className="bg-transparent border-none text-white focus:ring-0 w-full"
+                        />
+                        <span className="text-gray-500 px-3 font-mono">m</span>
+                     </div>
+                   </div>
+                 )}
+               </div>
             </div>
-          </div>
 
-          {/* Fiyat Özeti */}
-          <div className="rounded-lg border border-secondary bg-white p-6 shadow-sm">
-            <h2 className="mb-4 font-semibold text-primary">Fiyat Özeti</h2>
-            
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Gerçek Alan:</span>
-                <span>{priceResult.area} m²</span>
-              </div>
-              <div className="flex justify-between border-b pb-2">
-                <span className="text-gray-600">Faturalandırılan Alan:</span>
-                <span className="font-medium">{priceResult.chargedArea} m²</span>
+            {/* Fiyat Kartı */}
+            <div className="rounded-xl bg-white p-6 text-black shadow-xl">
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                   <span className="text-xs font-bold text-gray-400 uppercase">Tahmini Tutar</span>
+                   <div className="text-4xl font-black tracking-tight mt-1">
+                      {priceResult.totalPrice} <span className="text-lg align-top">₺</span>
+                   </div>
+                </div>
+                <div className="text-right">
+                   <div className="text-sm font-medium text-gray-600">{priceResult.chargedArea} m²</div>
+                   <div className="text-xs text-gray-400">Faturalandırılan</div>
+                </div>
               </div>
               
-              {priceResult.isMinApplied && (
-                <div className="text-xs text-orange-600 font-medium bg-orange-50 p-2 rounded">
-                  * Minimum 2m² sipariş kuralı uygulandı.
-                </div>
-              )}
+              <Button className="w-full mt-4 bg-black text-white hover:bg-gray-800 h-12 text-lg">
+                Sepete Ekle
+              </Button>
             </div>
-
-            <div className="mt-4 flex items-end justify-between">
-              <span className="text-gray-500">Toplam Tutar</span>
-              <span className="text-3xl font-bold text-primary">
-                {priceResult.totalPrice} ₺
-              </span>
-            </div>
-
-            <Button className="mt-4 w-full bg-secondary text-secondary-foreground hover:bg-secondary/90">
-              Sepete Ekle
-            </Button>
-          </div>
-
         </div>
       </div>
     </div>

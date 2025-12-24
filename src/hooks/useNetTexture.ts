@@ -3,60 +3,67 @@ import { useLoader } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useConfigStore, ProductType } from '../stores/useConfigStore';
 
-// Hangi sporda file gözleri ne kadar sık?
 const getDensity = (type: ProductType): number => {
   switch (type) {
-    case 'basketball': return 25; // Çok sık
-    case 'badminton': return 25;  // Çok sık
-    case 'tennis': return 20;     // Sık
-    case 'safety': return 15;     // Orta-Sık (Düşmeyi önleyici)
-    case 'volleyball': return 10; // Orta
-    case 'soccer': return 5;      // Geniş
-    case 'ballstop': return 4;    // Çok Geniş
+    case 'basketball': return 10; 
+    case 'badminton': return 20;
+    case 'tennis': return 15;
+    case 'safety': return 12;
+    case 'volleyball': return 10;
+    case 'soccer': return 4;
+    case 'ballstop': return 2;
     default: return 5;
   }
 };
 
 const generateNetTextureURL = () => {
+  const size = 1024; 
   const canvas = document.createElement('canvas');
-  canvas.width = 256; canvas.height = 256; 
+  canvas.width = size; 
+  canvas.height = size;
   const ctx = canvas.getContext('2d');
+  
   if (ctx) {
-    ctx.clearRect(0, 0, 256, 256);
-    // İp çizimi
-    ctx.strokeStyle = 'rgba(255, 255, 255, 1)'; 
-    ctx.lineWidth = 8;
-    ctx.strokeRect(0, 0, 256, 256);
+    // Temizle
+    ctx.clearRect(0, 0, size, size);
     
-    // Hafif gölge (Derinlik hissi)
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(4, 4, 256, 256);
+    // RENK: SAF BEYAZ
+    ctx.strokeStyle = '#FFFFFF';
+    
+    // KALINLIK: Çok belirgin
+    ctx.lineWidth = 40; 
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    
+    // Kareyi çiz
+    ctx.strokeRect(20, 20, size-40, size-40);
+
+    // Dokuya "Parlaklık" efekti (İpin ortası daha parlak)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = 10;
+    ctx.strokeRect(20, 20, size-40, size-40);
   }
   return canvas.toDataURL('image/png');
 };
 
 export const useNetTexture = () => {
-  const { width, height, color, productType, depth } = useConfigStore();
+  const { width, height, productType, depth } = useConfigStore();
+  // color dependency'sini kaldırdık, hep beyaz olacak
   const textureURL = useMemo(() => generateNetTextureURL(), []);
   const texture = useLoader(THREE.TextureLoader, textureURL);
 
   useLayoutEffect(() => {
     if (texture) {
       texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-      texture.anisotropy = 16;
+      texture.anisotropy = 32;
+      texture.minFilter = THREE.NearestMipmapLinearFilter;
       
       const density = getDensity(productType);
       
-      // Basketbol silindiriktir, hesap farklı
-      let wRep, hRep;
-      if (productType === 'basketball') {
-        wRep = 12; // Çevresi boyunca tekrar
-        hRep = height * density;
-      } else {
-        wRep = Math.max(1, width * density);
-        hRep = Math.max(1, height * density);
-      }
+      let wRep = Math.max(1, width * density);
+      let hRep = Math.max(1, height * density);
+
+      if (productType === 'basketball') { wRep = 8; hRep = 6; }
       
       texture.repeat.set(wRep, hRep);
       texture.needsUpdate = true;
@@ -65,9 +72,13 @@ export const useNetTexture = () => {
 
   return {
     map: texture,
-    color: color,
+    color: '#FFFFFF', // Materyal rengi de SAF BEYAZ
     transparent: true,
     side: THREE.DoubleSide,
-    alphaTest: 0.2,
+    alphaTest: 0.5,
+    roughness: 0.2, // Parlak ip (Işığı yansıtsın)
+    metalness: 0.1,
+    emissive: '#FFFFFF', // Hafifçe kendi ışığını yayar (Karanlıkta görünmesi için kritik)
+    emissiveIntensity: 0.2, 
   };
 };
