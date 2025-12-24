@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+@theme {
+  /* Filenes Sports Paleti */
+  --color-primary: #021a32;   /* Derin Lacivert (Logo Zemin) */
+  --color-primary-foreground: #ffffff;
+  
+  --color-secondary: #a3e635; /* Neon Yeşil/Lime (Logo Vurgu) */
+  --color-secondary-foreground: #021a32;
+
+  --color-accent: #94a3b8;    /* Metalik Gri (Logo Detay) */
+  
+  --color-background: #f8fafc;
+  --color-foreground: #0f172a;
+  
+  --radius-lg: 0.5rem;
+}
+
+/* Base Styles */
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: 'Inter', system-ui, sans-serif;
+}
