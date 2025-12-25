@@ -1,8 +1,8 @@
-import { useConfigStore, ProductType } from "./stores/useConfigStore";
-import { NetConfigurator } from "./components/3d/NetConfigurator";
-import { Button } from "./components/ui/Button";
-import { Input } from "./components/ui/Input";
-import { calculatePrice } from "./lib/pricing";
+import { useConfigStore, ProductType } from "../../stores/useConfigStore";
+import { NetConfigurator } from "../../components/3d/NetConfigurator";
+import { Button } from "../../components/ui/Button";
+import { Input } from "../../components/ui/Input";
+import { calculatePrice } from "../../lib/pricing";
 
 // İkon ve Etiket Listesi
 const types: { id: ProductType; label: string; icon: string }[] = [

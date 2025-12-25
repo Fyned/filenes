@@ -4,13 +4,13 @@ import { ShoppingCartOutlined, DollarCircleOutlined, UserOutlined } from "@ant-d
 
 export const DashboardPage = () => {
   // Toplam Siparişler
-  const { data: ordersData } = useList({ resource: "orders" });
+  const { result } = useList({ resource: "orders" });
   
   // Bekleyen Siparişler
-  const pendingOrders = ordersData?.data.filter(o => o.status === 'pending').length || 0;
+  const pendingOrders = result?.data.filter((o: any) => o.status === 'pending').length || 0;
   
   // Toplam Ciro (Basit hesap)
-  const totalRevenue = ordersData?.data.reduce((acc, curr) => acc + (Number(curr.total_amount) || 0), 0) || 0;
+  const totalRevenue = result?.data.reduce((acc: number, curr: any) => acc + (Number(curr.total_amount) || 0), 0) || 0;
 
   return (
     <div style={{ padding: 24 }}>
@@ -41,7 +41,7 @@ export const DashboardPage = () => {
           <Card>
              <Statistic 
               title="Toplam Sipariş Sayısı" 
-              value={ordersData?.total || 0} 
+              value={result?.total || 0} 
               prefix={<UserOutlined />} 
             />
           </Card>

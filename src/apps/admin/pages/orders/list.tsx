@@ -6,7 +6,7 @@ export const OrderList = () => {
 
   return (
     <List>
-      <Table {...tableProps} rowKey="id">
+      <Table {...(tableProps as any)} rowKey="id">
         <Table.Column 
            dataIndex="created_at" 
            title="Tarih"

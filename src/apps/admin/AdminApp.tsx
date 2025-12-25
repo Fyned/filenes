@@ -1,7 +1,7 @@
-import { Refine } from "@refinedev/core";
-import { ThemedLayoutV2, ErrorComponent, RefineThemes, useNotificationProvider } from "@refinedev/antd";
-import "@refinedev/antd/dist/reset.css"; // Antd CSS
-import { DataProvider } from "@refinedev/supabase";
+import { Refine, Authenticated } from "@refinedev/core"; // Authenticated eklendi
+import { ThemedLayout, ErrorComponent, useNotificationProvider, AuthPage } from "@refinedev/antd"; // AuthPage eklendi
+import "@refinedev/antd/dist/reset.css"; 
+import { dataProvider } from "@refinedev/supabase";
 import { supabase } from "../../lib/supabaseClient";
 import { authProvider } from "./authProvider";
 import { DashboardPage } from "./pages/dashboard";
@@ -9,17 +9,14 @@ import { ProductList } from "./pages/products/list";
 import { ProductEdit } from "./pages/products/edit";
 import { OrderList } from "./pages/orders/list";
 import { OrderShow } from "./pages/orders/show";
-import { Route, Routes, Navigate, Outlet } from "react-router-dom";
+import { Route, Routes, Outlet, Navigate } from "react-router-dom"; // Navigate eklendi
 import { ConfigProvider } from "antd";
-
-// Supabase Data Provider'ı başlat
-const dataProvider = DataProvider(supabase);
 
 const AdminApp = () => {
   return (
     <ConfigProvider theme={{ token: { colorPrimary: '#021a32' } }}>
         <Refine
-          dataProvider={dataProvider}
+          dataProvider={dataProvider(supabase)}
           authProvider={authProvider}
           notificationProvider={useNotificationProvider}
           resources={[
@@ -47,12 +44,37 @@ const AdminApp = () => {
           }}
         >
             <Routes>
-                {/* Admin Layout */}
+                {/* 1. GİRİŞ SAYFASI (Koruma Kalkanının Dışında) */}
+                <Route 
+                    path="login" 
+                    element={
+                        <AuthPage 
+                            type="login" 
+                            title={
+                              <div style={{ fontSize: "20px", fontWeight: "bold", color: "#021a32" }}>
+                                FS Admin Girişi
+                              </div>
+                            }
+                            formProps={{
+                                initialValues: { email: "admin@filenessports.com" }
+                            }}
+                        />
+                    } 
+                />
+
+                {/* 2. KORUNAN SAYFALAR (Authenticated Wrapper İçinde) */}
                 <Route
                     element={
-                        <ThemedLayoutV2 Title={({ collapsed }) => collapsed ? "FS" : "Filenes Admin"}>
-                            <Outlet />
-                        </ThemedLayoutV2>
+                        // KİLİT NOKTASI: Giriş yapılmamışsa /admin/login'e at
+                        <Authenticated 
+                            key="admin-auth" 
+                            fallback={<Navigate to="/admin/login" />}
+                            redirectOnFail="/admin/login"
+                        >
+                            <ThemedLayout>
+                                <Outlet />
+                            </ThemedLayout>
+                        </Authenticated>
                     }
                 >
                     <Route index element={<DashboardPage />} />
@@ -60,6 +82,8 @@ const AdminApp = () => {
                     <Route path="products">
                         <Route index element={<ProductList />} />
                         <Route path="edit/:id" element={<ProductEdit />} />
+                        {/* Create rotası eklendi */}
+                        <Route path="create" element={<ProductEdit />} /> 
                     </Route>
 
                     <Route path="orders">

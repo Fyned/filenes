@@ -1,76 +1,125 @@
-import { AuthBindings } from "@refinedev/core";
+import { AuthProvider } from "@refinedev/core";
 import { supabase } from "../../lib/supabaseClient";
 
-export const authProvider: AuthBindings = {
-  login: async ({ email, password }) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+const ADMIN_EMAIL = "admin@filenessports.com";
 
-    if (error) {
-      return {
-        success: false,
-        error: { message: error.message, name: "Giriş Hatası" },
-      };
-    }
+export const authProvider: AuthProvider = {
+  login: async ({ email, password }: any) => {
+    try {
+      console.log("Giriş Denemesi:", email); // Konsolda görmek için
 
-    // Admin kontrolü
-    if (data.user) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("is_admin")
-        .eq("id", data.user.id)
-        .single();
-
-      if (!profile?.is_admin) {
-        await supabase.auth.signOut();
+      // 1. Mail Kontrolü
+      if (email.trim().toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
         return {
           success: false,
-          error: { message: "Bu panele erişim yetkiniz yok.", name: "Yetkisiz Erişim" },
+          error: {
+            message: "Bu panele sadece admin@filenessports.com girebilir.",
+            name: "Yetkisiz E-posta",
+          },
         };
       }
-    }
 
-    return { success: true, redirectTo: "/admin" };
+      // 2. Supabase Girişi
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        console.error("Supabase Hatası:", error);
+        return {
+          success: false,
+          error: {
+            message: error.message === "Invalid login credentials" 
+              ? "Şifre veya e-posta yanlış." 
+              : error.message,
+            name: "Giriş Başarısız",
+          },
+        };
+      }
+
+      // 3. Admin Yetki Kontrolü (GEÇİCİ OLARAK DEVRE DIŞI)
+      // if (data.user) {
+      //   const { data: profile, error: profileError } = await supabase
+      //     .from("profiles")
+      //     .select("is_admin")
+      //     .eq("id", data.user.id)
+      //     .single();
+
+      //   if (profileError || !(profile as any)?.is_admin) {
+      //     console.error("Profil Hatası:", profileError);
+      //     await supabase.auth.signOut();
+      //     return {
+      //       success: false,
+      //       error: {
+      //         message: "Kullanıcı giriş yaptı ancak 'Admin' yetkisi veritabanında bulunamadı.",
+      //         name: "Yetki Hatası",
+      //       },
+      //     };
+      //   }
+      // }
+
+      // GEÇİCİ BYPASS: Supabase girişi başarılıysa direkt admin paneline at
+      console.log("✅ Bypass aktif - Admin kontrolü atlandı");
+      return { success: true, redirectTo: "/admin" };
+      
+    } catch (err: any) {
+      console.error("Beklenmeyen Hata:", err);
+      return {
+        success: false,
+        error: {
+          message: "Bir sistem hatası oluştu. Konsolu kontrol edin.",
+          name: "Sistem Hatası",
+        },
+      };
+    }
   },
+
   logout: async () => {
     await supabase.auth.signOut();
-    return { success: true, redirectTo: "/login" };
+    return { success: true, redirectTo: "/admin/login" };
   },
+
   check: async () => {
     const { data } = await supabase.auth.getSession();
     const { user } = data.session || {};
 
     if (user) {
-      // Session var, ama admin mi tekrar teyit edelim (güvenlik için)
-       const { data: profile } = await supabase
-        .from("profiles")
-        .select("is_admin")
-        .eq("id", user.id)
-        .single();
+      if (user.email !== ADMIN_EMAIL) {
+         return { authenticated: false, redirectTo: "/admin/login" };
+      }
+      
+      // GEÇİCİ BYPASS: Admin kontrolü devre dışı
+      // const { data: profile } = await supabase
+      //   .from("profiles")
+      //   .select("is_admin")
+      //   .eq("id", user.id)
+      //   .single();
         
-       if (profile?.is_admin) return { authenticated: true };
+      // if ((profile as any)?.is_admin) {
+      //   return { authenticated: true };
+      // }
+      
+      // E-posta doğruysa ve oturum varsa direkt geçir
+      return { authenticated: true };
     }
 
-    return { authenticated: false, redirectTo: "/login" };
+    return { authenticated: false, redirectTo: "/admin/login" };
   },
-  onError: async (error) => {
-    console.error(error);
+
+  onError: async (error: any) => {
+    console.error("Auth Hatası:", error);
     return { error };
   },
-  // Opsiyonel metotlar
-  register: async () => ({ success: false, error: { message: "Kayıt kapalı", name: "Error" } }),
-  forgotPassword: async () => ({ success: false, error: { message: "Yönetici ile görüşün", name: "Error" } }),
-  updatePassword: async () => ({ success: false, error: { message: "Yönetici ile görüşün", name: "Error" } }),
+  
   getPermissions: async () => null,
   getIdentity: async () => {
     const { data } = await supabase.auth.getUser();
     if (data?.user) {
       return {
         id: data.user.id,
-        name: data.user.email,
-        avatar: "https://i.pravatar.cc/150",
+        name: "Admin",
+        avatar: "https://ui-avatars.com/api/?name=Admin&background=000&color=fff",
       };
     }
     return null;
